@@ -24,27 +24,35 @@ results = [
     ["名言", "作者", "标签"],
 ]
 
-response = requests.get('https://quotes.toscrape.com/', headers=headers)
-soup = BeautifulSoup(response.text, "lxml")
+# 添加翻页功能
+# https://quotes.toscrape.com/
+# https://quotes.toscrape.com/page/2/
+# https://quotes.toscrape.com/page/3/
 
-# find_all方法返回所有符合条件的标签
-quote_data = soup.find_all(name='div', attrs={'class': 'quote'})
+for page in range(1, 11):
+    url = f"https://quotes.toscrape.com/page/{page}/"
 
-for item in quote_data:
-    # find方法返回第一个符合条件的标签
-    quote = item.find("span", attrs={'class': 'text', 'itemprop': 'text'}).get_text(strip=True)
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.text, "lxml")
 
-    # string属性获取标签内的文本内容, 但要注意: 如果标签内有子标签, 则返回None
-    author = item.small.string
+    # find_all方法返回所有符合条件的标签
+    quote_data = soup.find_all(name='div', attrs={'class': 'quote'})
 
-    # select方法, 传入相应的CSS选择器, 返回所有符合条件的标签
-    tag = []
-    for tag_item in item.select('a[class="tag"]'):
-        tag.append(tag_item.get_text(strip=True))
-    tag_str = "-".join(tag)
+    for item in quote_data:
+        # find方法返回第一个符合条件的标签
+        quote = item.find("span", attrs={'class': 'text', 'itemprop': 'text'}).get_text(strip=True)
 
-    data = [quote, author, tag_str]
-    results.append(data)
+        # string属性获取标签内的文本内容, 但要注意: 如果标签内有子标签, 则返回None
+        author = item.small.string
+
+        # select方法, 传入相应的CSS选择器, 返回所有符合条件的标签
+        tag = []
+        for tag_item in item.select('a[class="tag"]'):
+            tag.append(tag_item.get_text(strip=True))
+        tag_str = "-".join(tag)
+
+        data = [quote, author, tag_str]
+        results.append(data)
 
 with open("./名言.csv", "w", encoding="utf-8-sig", newline="") as f:
     writer = csv.writer(f)
